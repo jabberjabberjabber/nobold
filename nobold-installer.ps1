@@ -229,7 +229,8 @@ exit /b 1
     $open_webui_start_script = @"
 @echo off
 setlocal enabledelayedexpansion
-
+set "OPENAI_API_BASE_URL=http://localhost:5001/v1"
+set "ENABLE_OPENAI_API=True"
 set "VENV_NAME=nobold_env"
 
 set "PYTHON_PATH=python"
