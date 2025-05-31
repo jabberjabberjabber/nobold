@@ -83,9 +83,26 @@ function Get-KoboldCppBinary() {
         Write-Warning "Binary verification failed, but continuing..."
     }
 }
-
-
-
+function Get-WinSW() {
+	Write-Info "Getting WinSW..."
+	
+	$binary_path = "$InstallDir\bin\kobold_service.exe"
+	$download_url = "https://github.com/winsw/winsw/releases/latest/WinSW-x64.exe"
+	Write-Info "Downloading from: $download_url"
+    Write-Info "Installing to: $binary_path"
+    try {
+        $webClient = New-Object System.Net.WebClient
+        $webClient.DownloadFile($download_url, $binary_path)
+        Write-Info "Binary downloaded successfully"
+    } catch {
+        Write-Error "Failed to download binary: $($_.Exception.Message)"
+        Write-Info "You may need to manually download from: $download_url"
+        throw
+    }
+	#Write-Info "Installing Kobold service..."
+	#start-process "$InstallDir\bin\kobold_service" install
+	#start-process "$InstallDir\bin\kobold_service" start
+}
 function Install-Open-WebUI() {
    
     Write-Host "`nInstall Open-WebUI?" -ForegroundColor Yellow
@@ -128,7 +145,21 @@ function Open-Kobold(){
 
 function New-HelperScripts() {
     Write-Info "Creating helper scripts..."
-    
+    $service_helper_xml = @"
+<service>
+  <id>Kobold Engine</id>
+  <name>KoboldCpp LLM Engine Service</name>
+  <description>Local LLM inference engine</description>
+  <executable>$InstallDir\bin\koboldcpp.exe</executable>
+  <arguments>--config $InstallDir\config\default.kcppt</arguments>
+  <workingdirectory>$InstallDir\bin</workingdirectory>
+  <logmode>roll</logmode>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="20 sec"/>
+  <onfailure action="none"/>
+</service>
+"@
+	$service_helper_xml | Set-Content "$InstallDir\bin\kobold_service.xml"
     $open_webui_install_script = @"
 @echo off
 setlocal enabledelayedexpansion
@@ -212,7 +243,7 @@ open-webui serve
 @echo off
 echo Starting KoboldCpp...
 cd /d "$InstallDir"
-.\bin\koboldcpp.exe --config .\config\default.kcpps
+.\bin\koboldcpp.exe --config .\config\default.kcppt
 "@
     $start_script | Set-Content "$InstallDir\scripts\start.bat"
 
@@ -249,12 +280,13 @@ function Add-ToPath {
 try {
     Initialize-Directories
     Get-KoboldCppBinary
-	Open-Kobold
+	#Open-Kobold
     New-HelperScripts
 	Install-Open-WebUI
-	Copy-Item -Path ./manage-models.ps1 "$InstallDir\scripts\"
+	Get-WinSW
+	Copy-Item -Path ./default.kcppt "$InstallDir\config\"
 	Add-ToPath
-    
+	Start-Process PowerShell -ArgumentList "-Command", "cd '$InstallDir\bin'; .\kobold_service.exe install; .\kobold_service.exe start; pause" -Verb RunAs
     Write-Info "Installation completed successfully!"
 } catch {
     Write-Error "Installation failed: $($_.Exception.Message)"
