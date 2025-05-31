@@ -129,19 +129,6 @@ function Install-Open-WebUI() {
         }
     }
 }
-function Open-Kobold(){
-    Clear-Host
-    Write-Host "================ KoboldCpp Setup ================" -ForegroundColor Yellow
-	Write-Host ""
-	Write-Host "The KoboldCpp Launcher is going to start." -ForegroundColor Cyan
-	Write-Host "1. Click on the Model Search button and find a model to load as your default" -ForegroundColor Cyan
-	Write-Host "2. Configure any addition settings like Context Size" -ForegroundColor Cyan
-	Write-Host "3. Save the configuration, named default.kcpps in User\.koboldcpp\config" -ForegroundColor Cyan
-    Write-Host ""
-	Write-Host "                  Press Enter when ready!" -ForegroundColor Cyan
-    Read-Host "Press Enter"
-	Start-Process "$InstallDir\bin\koboldcpp.exe"
-}
 
 function New-HelperScripts() {
     Write-Info "Creating helper scripts..."
