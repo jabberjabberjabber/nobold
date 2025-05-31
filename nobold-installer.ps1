@@ -56,60 +56,6 @@ function Initialize-Directories {
     }
 }
 
-function Get-UserHardwareChoice {
-    Write-Host "`nSelect your hardware configuration:" -ForegroundColor Yellow
-    Write-Host "1. CPU only (standard)" -ForegroundColor Cyan
-    Write-Host "2. NVIDIA GPU (CUDA)" -ForegroundColor Cyan
-    Write-Host ""
-    
-    $valid_choices = @('1', '2', '3', '4')
-    $choice = $null
-    
-    while ($choice -notin $valid_choices) {
-        $choice = Read-Host "Enter your choice (1-4)"
-        if ($choice -notin $valid_choices) {
-            Write-Warning "Invalid choice. Please enter 1, 2, 3, or 4."
-        }
-    }
-    
-    $hardware_info = @{
-        backend = ""
-        display_name = ""
-        binary_suffix = ""
-        gpu_flag = ""
-    }
-    
-    switch ($choice) {
-        '1' {
-            $hardware_info.backend = "cpu"
-            $hardware_info.display_name = "CPU only"
-            $hardware_info.binary_suffix = ""
-            $hardware_info.gpu_flag = ""
-        }
-        '2' {
-            $hardware_info.backend = "cuda"
-            $hardware_info.display_name = "NVIDIA GPU (CUDA)"
-            $hardware_info.binary_suffix = "_cu12"
-            $hardware_info.gpu_flag = "--usecublas"
-        }
-        '3' {
-            $hardware_info.backend = "vulkan"
-            $hardware_info.display_name = "AMD/Intel GPU (Vulkan)"
-            $hardware_info.binary_suffix = ""
-            $hardware_info.gpu_flag = "--usevulkan"
-        }
-        '4' {
-            $hardware_info.backend = "clblast"
-            $hardware_info.display_name = "AMD GPU (CLBlast)"
-            $hardware_info.binary_suffix = ""
-            $hardware_info.gpu_flag = "--useclblast"
-        }
-    }
-    
-    Write-Info "Selected: $($hardware_info.display_name)"
-    return $hardware_info
-}
-
 function Get-KoboldCppBinary() {
     Write-Info "Downloading KoboldCpp binary..."
     
@@ -266,7 +212,7 @@ open-webui serve
 @echo off
 echo Starting KoboldCpp...
 cd /d "$InstallDir"
-.\bin\koboldcpp.exe --config default.kcpps
+.\bin\koboldcpp.exe --config .\config\default.kcpps
 "@
     $start_script | Set-Content "$InstallDir\scripts\start.bat"
 
@@ -279,12 +225,6 @@ echo KoboldCpp stopped.
 "@
     $stop_script | Set-Content "$InstallDir\scripts\stop.bat"
     
-    $download_model_script = @"
-@echo off
-setlocal enabledelayedexpansion
-PowerShell -NoProfile -ExecutionPolicy Bypass -Command "& "./manage-models.ps1 browse
-"@
-    $download_model_script | Set-Content "$InstallDir\scripts\download-model.bat"
     
     Write-Info "Helper scripts created in: $InstallDir\scripts\"
 }
@@ -305,69 +245,15 @@ function Add-ToPath {
     }
 }
 
-function Show-Instructions($config, $hardware_info) {
-    
-
-    Clear-Host
-    Write-Host "================ Install Complete ================" -ForegroundColor Cyan
-	Write-Host @"
-KoboldCpp has been installed to: $InstallDir
-Hardware configuration: $($hardware_info.display_name)
-
-QUICK START:
-1. Download a model:
-   $InstallDir\scripts\download-model.bat
-
-2. Start KoboldCpp with a model:
-   $InstallDir\scripts\start-with-model.bat models\<model-file>.gguf
-
-3. Or start without a model (you can load one through the web UI):
-   $InstallDir\scripts\start.bat
-
-4. Test the OpenAI-compatible API:
-   curl http://localhost:$($config.port)/v1/models
-
-5. Setup OpenWebUI:
-   docker run -d -p 3000:8080 \
-     -e OPENAI_API_BASE_URL=http://localhost:$($config.port)/v1 \
-     -v open-webui:/app/backend/data \
-     --name open-webui \
-     ghcr.io/open-webui/open-webui:main
-
-ENDPOINTS:
-- KoboldCpp Web UI: http://localhost:$($config.port)
-- OpenAI-compatible API: http://localhost:$($config.port)/v1
-- Native KoboldCpp API: http://localhost:$($config.port)/api
-
-ACCESS:
-- KoboldCpp Interface: http://localhost:$($config.port)
-- OpenWebUI: http://localhost:3000 (after setup)
-
-NEXT STEPS:
-- GPU users: Adjust --gpulayers parameter in start scripts if needed
-- Download models from the registry or Hugging Face
-- Configure advanced settings through the web interface
-
-SUPPORT:
-- Documentation: https://github.com/LostRuins/koboldcpp
-- Issues: https://github.com/LostRuins/koboldcpp/issues
-- KoboldAI Discord: https://koboldai.org/discord
-
-"@ -ForegroundColor Green
-}
 
 try {
     Initialize-Directories
-    #$hardware_info = Get-UserHardwareChoice
     Get-KoboldCppBinary
 	Open-Kobold
-    #$config = New-Configuration $hardware_info
     New-HelperScripts
 	Install-Open-WebUI
 	Copy-Item -Path ./manage-models.ps1 "$InstallDir\scripts\"
-	#Start-Process -wait "$InstallDir\scripts\download-model.bat"
 	Add-ToPath
-    #Show-Instructions
     
     Write-Info "Installation completed successfully!"
 } catch {
