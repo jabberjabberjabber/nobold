@@ -4,3 +4,5 @@ Everyone asking for a drop-in Ollama replacement that works with Open-WebUI, wel
 
 ![Nobold](nobold.png)
 
+**This will install KoboldCpp as a service on your machine! You have been warned.**
+
