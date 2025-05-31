@@ -287,6 +287,7 @@ try {
 	Copy-Item -Path ./default.kcppt "$InstallDir\config\"
 	Add-ToPath
 	Start-Process PowerShell -ArgumentList "-Command", "cd '$InstallDir\bin'; .\kobold_service.exe install; .\kobold_service.exe start; pause" -Verb RunAs
+	start-process "%InstallDir\scripts\open-webui-start.bat"
     Write-Info "Installation completed successfully!"
 } catch {
     Write-Error "Installation failed: $($_.Exception.Message)"
