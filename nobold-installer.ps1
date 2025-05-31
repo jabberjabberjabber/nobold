@@ -87,7 +87,7 @@ function Get-WinSW() {
 	Write-Info "Getting WinSW..."
 	
 	$binary_path = "$InstallDir\bin\kobold_service.exe"
-	$download_url = "https://github.com/winsw/winsw/releases/latest/WinSW-x64.exe"
+	$download_url = "https://github.com/winsw/winsw/releases/latest/download/WinSW-x64.exe"
 	Write-Info "Downloading from: $download_url"
     Write-Info "Installing to: $binary_path"
     try {
