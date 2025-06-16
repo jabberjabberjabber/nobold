@@ -46,4 +46,4 @@ Start OpenWeb-UI:
 
 To uninstall:
 
-`./nobold-linux --uninstall`
+`./nobold-linux.sh --uninstall`
