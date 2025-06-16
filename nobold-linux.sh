@@ -257,7 +257,7 @@ fi
 source "$VENV_DIR/bin/activate"
 
 # Upgrade pip and install open-webui
-python -m pip install --upgrade pip
+python3 -m pip install --upgrade pip
 pip install open-webui || {
     echo "Failed to install open-webui."
     exit 1
